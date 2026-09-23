@@ -33,6 +33,13 @@ const getInitialFavorites = () => {
   }
 }
 
+const getAssetUrl = (path) => {
+  if (!path) return ''
+  if (path.startsWith('http')) return path
+  const base = import.meta.env.BASE_URL || '/'
+  return `${base}${path.replace(/^\/+/, '')}`
+}
+
 function App() {
   const [page, setPage] = useState('inicio')
   const [selectedStyle, setSelectedStyle] = useState('gothic')
@@ -265,7 +272,7 @@ function App() {
               <div className="outfit-grid">
                 {currentOutfit.items.map((item) => (
                   <div key={`${item.id}-${item.name}`} className="outfit-item">
-                    <img src={item.file} alt={item.name} />
+                    <img src={getAssetUrl(item.file)} alt={item.name} />
                   </div>
                 ))}
               </div>
@@ -350,7 +357,7 @@ function App() {
             <article key={outfit.id} className="favorite-card glass-panel">
               <div className="favorite-visuals">
                 {outfit.items.map((item) => (
-                  <img key={`${outfit.id}-${item.id}`} src={item.file} alt={item.name} />
+                  <img key={`${outfit.id}-${item.id}`} src={getAssetUrl(item.file)} alt={item.name} />
                 ))}
               </div>
 
