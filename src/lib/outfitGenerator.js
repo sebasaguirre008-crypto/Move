@@ -130,43 +130,60 @@ function createOutfitSignature(items) {
     .join('-')
 }
 
+function hasUniqueItems(items) {
+  return new Set(items.map((item) => item.id)).size === items.length
+}
+
+function getAccessoryOptions(pool, maxExtras = 3) {
+  const items = pool.filter((item) => item.category === 'accesorio')
+  const options = [[]]
+
+  for (let count = 1; count <= Math.min(items.length, maxExtras); count += 1) {
+    for (const combo of combinationsOf(items, count)) {
+      options.push(combo)
+    }
+  }
+
+  return options
+}
+
 function validateStyleRules(style, items) {
+  if (!items.length || !hasUniqueItems(items)) return false
+
   const byCat = new Map(items.map((item) => [item.category, item]))
 
   if (style === 'gothic') {
+    const validCategories = ['blusa', 'falda', 'zapatos', 'guantes', 'accesorio']
+    if (items.some((item) => !validCategories.includes(item.category))) return false
     if (!byCat.get('blusa') || !byCat.get('falda') || !byCat.get('zapatos')) return false
-    return Boolean(byCat.get('accesorio') || byCat.get('guantes'))
+    const accessoryCount = items.filter((item) => ['guantes', 'accesorio'].includes(item.category)).length
+    return accessoryCount >= 1
   }
 
   if (style === 'baddie') {
+    const validCategories = ['blusa', 'falda', 'medias', 'zapatos']
+    if (items.some((item) => !validCategories.includes(item.category))) return false
     if (!byCat.get('blusa') || !byCat.get('falda') || !byCat.get('zapatos')) return false
     if (byCat.get('zapatos')?.id?.toLowerCase().includes('zapatos2')) {
-      return !byCat.get('medias')
+      return items.filter((item) => item.category === 'medias').length === 0
     }
-    return !!byCat.get('medias')
+    return items.filter((item) => item.category === 'medias').length === 1
   }
 
-  if (style === 'vintage') {
-    const hasDress = !!byCat.get('vestido')
-    const hasMain = !!byCat.get('blusa') && (!!byCat.get('falda') || !!byCat.get('pantalon') || !!byCat.get('short'))
-    if (hasDress) {
-      return !byCat.get('blusa') && !byCat.get('falda') && !byCat.get('pantalon') && !byCat.get('short')
-    }
-    return !!byCat.get('blusa') && (hasMain || !!byCat.get('vestido'))
-  }
-
-  if (style === 'oldMoney') {
+  if (style === 'vintage' || style === 'oldMoney') {
+    const dressCount = items.filter((item) => item.category === 'vestido').length
+    const topCount = items.filter((item) => item.category === 'blusa').length
+    const bottomCount = items.filter((item) => ['falda', 'pantalon', 'short'].includes(item.category)).length
     const shoeCount = items.filter((item) => item.category === 'zapatos').length
     const bagCount = items.filter((item) => item.category === 'bolso').length
     const collarCount = items.filter((item) => item.category === 'collar').length
-    const hasDress = !!byCat.get('vestido')
-    const hasBottom = !!byCat.get('falda') || !!byCat.get('pantalon') || !!byCat.get('short')
+    const accessoryCount = items.filter((item) => item.category === 'accesorio').length
 
-    if (!byCat.get('blusa') || shoeCount !== 1) return false
-    if (bagCount > 1 || collarCount > 1) return false
-    if (hasDress && hasBottom) return false
-    if (!hasDress && !hasBottom) return false
-    return true
+    if (dressCount > 0) {
+      return dressCount === 1 && topCount === 0 && bottomCount === 0 && shoeCount === 0 && bagCount === 0 && collarCount === 0 && accessoryCount === 0
+    }
+
+    return topCount === 1 && bottomCount === 1 && shoeCount === 1 && bagCount <= 1 && collarCount <= 1
   }
 
   return true
@@ -177,29 +194,20 @@ function buildCombinations(style, items) {
   const results = []
 
   if (style === 'gothic') {
-    for (const blusa of pool.filter((item) => item.category === 'blusa')) {
-      for (const falda of pool.filter((item) => item.category === 'falda')) {
-        for (const zapatos of pool.filter((item) => item.category === 'zapatos')) {
-          const accessories = pool.filter((item) => ['guantes', 'accesorio'].includes(item.category))
-          for (const accessory of accessories) {
-            const outfit = [blusa, falda, zapatos, accessory]
-            if (new Set(outfit.map((item) => item.id)).size !== outfit.length) continue
-            results.push(outfit)
-          }
-        }
-      }
-    }
+    const tops = pool.filter((item) => item.category === 'blusa')
+    const bottoms = pool.filter((item) => item.category === 'falda')
+    const shoes = pool.filter((item) => item.category === 'zapatos')
+    const accessories = pool.filter((item) => ['guantes', 'accesorio'].includes(item.category))
 
-    const extraAccessoryPool = pool.filter((item) => ['guantes', 'accesorio'].includes(item.category))
-    for (const blusa of pool.filter((item) => item.category === 'blusa')) {
-      for (const falda of pool.filter((item) => item.category === 'falda')) {
-        for (const zapatos of pool.filter((item) => item.category === 'zapatos')) {
-          for (const first of extraAccessoryPool) {
-            for (const second of extraAccessoryPool) {
-              if (first.id === second.id) continue
-              const outfit = [blusa, falda, zapatos, first, second]
-              if (new Set(outfit.map((item) => item.id)).size !== outfit.length) continue
-              results.push(outfit)
+    for (const blusa of tops) {
+      for (const falda of bottoms) {
+        for (const zapatos of shoes) {
+          for (let count = 1; count <= accessories.length; count += 1) {
+            for (const accessoryCombo of combinationsOf(accessories, count)) {
+              const outfit = [blusa, falda, zapatos, ...accessoryCombo]
+              if (hasUniqueItems(outfit)) {
+                results.push(outfit)
+              }
             }
           }
         }
@@ -207,23 +215,7 @@ function buildCombinations(style, items) {
     }
   }
 
-  if (style === 'vintage') {
-    const tops = pool.filter((item) => item.category === 'blusa')
-    const bottoms = pool.filter((item) => ['falda', 'pantalon', 'short'].includes(item.category))
-    const dresses = pool.filter((item) => item.category === 'vestido')
-
-    for (const top of tops) {
-      for (const bottom of bottoms) {
-        results.push([top, bottom])
-      }
-    }
-
-    for (const dress of dresses) {
-      results.push([dress])
-    }
-  }
-
-  if (style === 'oldMoney') {
+  if (style === 'vintage' || style === 'oldMoney') {
     const tops = pool.filter((item) => item.category === 'blusa')
     const bottoms = pool.filter((item) => ['falda', 'pantalon', 'short'].includes(item.category))
     const dresses = pool.filter((item) => item.category === 'vestido')
@@ -231,26 +223,18 @@ function buildCombinations(style, items) {
     const bags = pool.filter((item) => item.category === 'bolso')
     const collars = pool.filter((item) => item.category === 'collar')
     const accessories = pool.filter((item) => item.category === 'accesorio')
-
-    const optionalBagChoices = [[]].concat(bags.map((item) => [item]))
-    const optionalCollarChoices = [[]].concat(collars.map((item) => [item]))
-    const optionalAccessoryChoices = [[]]
-
-    for (let count = 1; count <= Math.min(accessories.length, 3); count += 1) {
-      for (const combo of combinationsOf(accessories, count)) {
-        optionalAccessoryChoices.push(combo)
-      }
-    }
+    const accessoryOptions = getAccessoryOptions(pool)
+    const bagOptions = [[]].concat(bags.map((item) => [item]))
+    const collarOptions = [[]].concat(collars.map((item) => [item]))
 
     for (const top of tops) {
       for (const bottom of bottoms) {
         for (const shoe of shoes) {
-          const base = [top, bottom, shoe]
-          for (const bagChoice of optionalBagChoices) {
-            for (const collarChoice of optionalCollarChoices) {
-              for (const accessoryChoice of optionalAccessoryChoices) {
-                const outfit = [...base, ...bagChoice, ...collarChoice, ...accessoryChoice]
-                if (new Set(outfit.map((item) => item.id)).size === outfit.length) {
+          for (const bagChoice of bagOptions) {
+            for (const collarChoice of collarOptions) {
+              for (const accessoryChoice of accessoryOptions) {
+                const outfit = [top, bottom, shoe, ...bagChoice, ...collarChoice, ...accessoryChoice]
+                if (hasUniqueItems(outfit)) {
                   results.push(outfit)
                 }
               }
@@ -261,34 +245,28 @@ function buildCombinations(style, items) {
     }
 
     for (const dress of dresses) {
-      for (const shoe of shoes) {
-        const base = [dress, shoe]
-        for (const bagChoice of optionalBagChoices) {
-          for (const collarChoice of optionalCollarChoices) {
-            for (const accessoryChoice of optionalAccessoryChoices) {
-              const outfit = [...base, ...bagChoice, ...collarChoice, ...accessoryChoice]
-              if (new Set(outfit.map((item) => item.id)).size === outfit.length) {
-                results.push(outfit)
-              }
-            }
-          }
-        }
-      }
+      results.push([dress])
     }
   }
 
   if (style === 'baddie') {
-    for (const blusa of pool.filter((item) => item.category === 'blusa')) {
-      for (const falda of pool.filter((item) => item.category === 'falda')) {
-        for (const zapatos of pool.filter((item) => item.category === 'zapatos')) {
-          const medias = pool.filter((item) => item.category === 'medias')
+    const tops = pool.filter((item) => item.category === 'blusa')
+    const bottoms = pool.filter((item) => item.category === 'falda')
+    const shoes = pool.filter((item) => item.category === 'zapatos')
+    const medias = pool.filter((item) => item.category === 'medias')
+
+    for (const blusa of tops) {
+      for (const falda of bottoms) {
+        for (const zapatos of shoes) {
           if (zapatos.id.toLowerCase().includes('zapatos2')) {
-            results.push([blusa, falda, zapatos])
+            const outfit = [blusa, falda, zapatos]
+            if (hasUniqueItems(outfit)) results.push(outfit)
             continue
           }
 
           for (const media of medias) {
-            results.push([blusa, falda, media, zapatos])
+            const outfit = [blusa, falda, media, zapatos]
+            if (hasUniqueItems(outfit)) results.push(outfit)
           }
         }
       }
@@ -302,23 +280,17 @@ export function generateOutfit(style) {
   const pool = getStylePool(style)
   const validOptions = buildCombinations(style, pool)
     .filter((items) => validateStyleRules(style, items))
-    .map((items) => {
-      const score = scoreOutfit(items, style)
-      const signature = createOutfitSignature(items)
-      return {
-        items,
-        score,
-        signature,
-      }
-    })
+    .map((items) => ({
+      items,
+      score: scoreOutfit(items, style),
+      signature: createOutfitSignature(items),
+    }))
 
   if (!validOptions.length) {
     return null
   }
 
-  const maxScore = Math.max(...validOptions.map((option) => option.score))
-  const bestOptions = validOptions.filter((option) => option.score >= maxScore * 0.82)
-  const selected = bestOptions[Math.floor(Math.random() * bestOptions.length)] || validOptions[Math.floor(Math.random() * validOptions.length)]
+  const selected = validOptions[Math.floor(Math.random() * validOptions.length)]
 
   return {
     style,
