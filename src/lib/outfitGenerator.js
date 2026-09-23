@@ -380,4 +380,21 @@ export function getStyleEmoji(style) {
   return styleMeta[style]?.emoji || '✨'
 }
 
-export const outfitRules = styleRules
+export const outfitRules = {
+  gothic: {
+    title: 'Gótico',
+    summary: 'Blusa + falda + zapatos + accesorio o guantes.',
+  },
+  vintage: {
+    title: 'Romántico / Vintage',
+    summary: 'Top o vestido con silueta romántica y pieza vintage.',
+  },
+  oldMoney: {
+    title: 'Old Money',
+    summary: '1 tipo de zapato, bolso opcional, collar opcional y accesorios.',
+  },
+  baddie: {
+    title: 'Baddie',
+    summary: 'Blusa + falda + zapatos y, si aplica, medias.',
+  },
+}
