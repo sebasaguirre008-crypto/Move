@@ -745,14 +745,27 @@
 
 .spotify-embed-wrap {
   padding: 0.8rem;
+  transition: padding 0.25s ease, opacity 0.25s ease;
+}
+
+.spotify-player.minimized .spotify-embed-wrap {
+  padding: 0.35rem 0.45rem 0.45rem;
 }
 
 .spotify-embed-wrap iframe {
   width: 100%;
   min-height: 200px;
+  height: 200px;
   border: 0;
   border-radius: 20px;
   background: #121218;
+  transition: height 0.25s ease, min-height 0.25s ease, opacity 0.25s ease;
+}
+
+.spotify-player.minimized .spotify-embed-wrap iframe {
+  min-height: 88px;
+  height: 88px;
+  opacity: 0.98;
 }
 
 .toast {

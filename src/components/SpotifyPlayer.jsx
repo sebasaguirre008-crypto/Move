@@ -20,16 +20,14 @@ export default function SpotifyPlayer() {
         </button>
       </div>
 
-      {!minimized && (
-        <div className="spotify-embed-wrap">
-          <iframe
-            title="Spotify playlist"
-            src={playlistUrl}
-            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-            loading="lazy"
-          />
-        </div>
-      )}
+      <div className={`spotify-embed-wrap ${minimized ? 'minimized' : ''}`}>
+        <iframe
+          title="Spotify playlist"
+          src={playlistUrl}
+          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+          loading="lazy"
+        />
+      </div>
     </div>
   )
 }
