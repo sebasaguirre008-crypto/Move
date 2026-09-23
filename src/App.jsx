@@ -397,8 +397,16 @@ function App() {
     <>
       {showIntro && (
         <div className="intro-overlay">
-          <div className="intro-card">
-            <span>MOVE</span>
+          <div className="intro-card" aria-label="MOVE">
+            {['M', 'O', 'V', 'E'].map((letter, index) => (
+              <span
+                key={letter + index}
+                className="intro-letter"
+                style={{ animationDelay: `${index * 0.12}s` }}
+              >
+                {letter}
+              </span>
+            ))}
           </div>
         </div>
       )}

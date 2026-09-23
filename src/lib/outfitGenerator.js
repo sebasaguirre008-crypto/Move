@@ -170,7 +170,7 @@ function validateStyleRules(style, items) {
     return items.filter((item) => item.category === 'medias').length === 1
   }
 
-  if (style === 'vintage' || style === 'oldMoney') {
+  if (style === 'vintage') {
     const dressCount = items.filter((item) => item.category === 'vestido').length
     const topCount = items.filter((item) => item.category === 'blusa').length
     const bottomCount = items.filter((item) => ['falda', 'pantalon', 'short'].includes(item.category)).length
@@ -184,6 +184,33 @@ function validateStyleRules(style, items) {
     }
 
     return topCount === 1 && bottomCount === 1 && shoeCount === 1 && bagCount <= 1 && collarCount <= 1
+  }
+
+  if (style === 'oldMoney') {
+    const dressCount = items.filter((item) => item.category === 'vestido').length
+    const topCount = items.filter((item) => item.category === 'blusa').length
+    const bottomCount = items.filter((item) => ['falda', 'pantalon', 'short'].includes(item.category)).length
+    const shoeCount = items.filter((item) => item.category === 'zapatos').length
+    const bagCount = items.filter((item) => item.category === 'bolso').length
+    const collarCount = items.filter((item) => item.category === 'collar').length
+    const accessoryCount = items.filter((item) => item.category === 'accesorio').length
+
+    const hasDress = dressCount === 1 && topCount === 0 && bottomCount === 0
+    const hasTopAndBottom = topCount === 1 && bottomCount === 1
+
+    if (!hasDress && !hasTopAndBottom) {
+      return false
+    }
+
+    if (shoeCount !== 1) {
+      return false
+    }
+
+    if (bagCount > 1 || collarCount > 1) {
+      return false
+    }
+
+    return accessoryCount >= 1
   }
 
   return true
@@ -215,7 +242,7 @@ function buildCombinations(style, items) {
     }
   }
 
-  if (style === 'vintage' || style === 'oldMoney') {
+  if (style === 'vintage') {
     const tops = pool.filter((item) => item.category === 'blusa')
     const bottoms = pool.filter((item) => ['falda', 'pantalon', 'short'].includes(item.category))
     const dresses = pool.filter((item) => item.category === 'vestido')
@@ -246,6 +273,51 @@ function buildCombinations(style, items) {
 
     for (const dress of dresses) {
       results.push([dress])
+    }
+  }
+
+  if (style === 'oldMoney') {
+    const tops = pool.filter((item) => item.category === 'blusa')
+    const bottoms = pool.filter((item) => ['falda', 'pantalon', 'short'].includes(item.category))
+    const dresses = pool.filter((item) => item.category === 'vestido')
+    const shoes = pool.filter((item) => item.category === 'zapatos')
+    const bags = pool.filter((item) => item.category === 'bolso')
+    const collars = pool.filter((item) => item.category === 'collar')
+    const accessories = pool.filter((item) => item.category === 'accesorio')
+    const accessoryOptions = getAccessoryOptions(pool).filter((combo) => combo.length >= 1)
+    const bagOptions = [[]].concat(bags.map((item) => [item]))
+    const collarOptions = [[]].concat(collars.map((item) => [item]))
+
+    for (const top of tops) {
+      for (const bottom of bottoms) {
+        for (const shoe of shoes) {
+          for (const bagChoice of bagOptions) {
+            for (const collarChoice of collarOptions) {
+              for (const accessoryChoice of accessoryOptions) {
+                const outfit = [top, bottom, shoe, ...bagChoice, ...collarChoice, ...accessoryChoice]
+                if (hasUniqueItems(outfit)) {
+                  results.push(outfit)
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    for (const dress of dresses) {
+      for (const shoe of shoes) {
+        for (const bagChoice of bagOptions) {
+          for (const collarChoice of collarOptions) {
+            for (const accessoryChoice of accessoryOptions) {
+              const outfit = [dress, shoe, ...bagChoice, ...collarChoice, ...accessoryChoice]
+              if (hasUniqueItems(outfit)) {
+                results.push(outfit)
+              }
+            }
+          }
+        }
+      }
     }
   }
 
