@@ -36,8 +36,10 @@ const getInitialFavorites = () => {
 const getAssetUrl = (path) => {
   if (!path) return ''
   if (path.startsWith('http')) return path
-  const base = import.meta.env.BASE_URL || '/'
-  return `${base}${path.replace(/^\/+/, '')}`
+
+  const clean = path.replace(/^\/+/, '')
+  const base = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '/')
+  return `${base}${clean}`
 }
 
 function App() {
