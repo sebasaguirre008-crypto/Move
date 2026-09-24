@@ -206,11 +206,11 @@ function validateStyleRules(style, items) {
       return false
     }
 
-    if (bagCount > 1 || collarCount > 1) {
+    if (bagCount > 1 || collarCount > 1 || accessoryCount > 1) {
       return false
     }
 
-    return accessoryCount >= 1
+    return true
   }
 
   return true
@@ -284,9 +284,9 @@ function buildCombinations(style, items) {
     const bags = pool.filter((item) => item.category === 'bolso')
     const collars = pool.filter((item) => item.category === 'collar')
     const accessories = pool.filter((item) => item.category === 'accesorio')
-    const accessoryOptions = getAccessoryOptions(pool).filter((combo) => combo.length >= 1)
     const bagOptions = [[]].concat(bags.map((item) => [item]))
     const collarOptions = [[]].concat(collars.map((item) => [item]))
+    const accessoryOptions = [[]].concat(accessories.map((item) => [item]))
 
     for (const top of tops) {
       for (const bottom of bottoms) {
