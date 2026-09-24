@@ -156,8 +156,14 @@ function validateStyleRules(style, items) {
     const validCategories = ['blusa', 'falda', 'zapatos', 'guantes', 'accesorio']
     if (items.some((item) => !validCategories.includes(item.category))) return false
     if (!byCat.get('blusa') || !byCat.get('falda') || !byCat.get('zapatos')) return false
-    const accessoryCount = items.filter((item) => ['guantes', 'accesorio'].includes(item.category)).length
-    return accessoryCount >= 1
+
+    const gloveCount = items.filter((item) => item.category === 'guantes').length
+    const accessoryCount = items.filter((item) => item.category === 'accesorio').length
+    const totalOptionalAccessories = gloveCount + accessoryCount
+
+    if (totalOptionalAccessories > 1) return false
+    if (totalOptionalAccessories < 1) return false
+    return true
   }
 
   if (style === 'baddie') {
@@ -177,13 +183,14 @@ function validateStyleRules(style, items) {
     const shoeCount = items.filter((item) => item.category === 'zapatos').length
     const bagCount = items.filter((item) => item.category === 'bolso').length
     const collarCount = items.filter((item) => item.category === 'collar').length
+    const jacketCount = items.filter((item) => item.category === 'chaqueta').length
     const accessoryCount = items.filter((item) => item.category === 'accesorio').length
 
     if (dressCount > 0) {
-      return dressCount === 1 && topCount === 0 && bottomCount === 0 && shoeCount === 0 && bagCount === 0 && collarCount === 0 && accessoryCount === 0
+      return dressCount === 1 && topCount === 0 && bottomCount === 0 && shoeCount === 0 && bagCount === 0 && collarCount === 0 && jacketCount === 0 && accessoryCount === 0
     }
 
-    return topCount === 1 && bottomCount === 1 && shoeCount === 1 && bagCount <= 1 && collarCount <= 1
+    return topCount === 1 && bottomCount === 1 && shoeCount === 1 && bagCount <= 1 && collarCount <= 1 && jacketCount <= 1 && accessoryCount <= 1
   }
 
   if (style === 'oldMoney') {
@@ -229,12 +236,10 @@ function buildCombinations(style, items) {
     for (const blusa of tops) {
       for (const falda of bottoms) {
         for (const zapatos of shoes) {
-          for (let count = 1; count <= accessories.length; count += 1) {
-            for (const accessoryCombo of combinationsOf(accessories, count)) {
-              const outfit = [blusa, falda, zapatos, ...accessoryCombo]
-              if (hasUniqueItems(outfit)) {
-                results.push(outfit)
-              }
+          for (const accessory of accessories) {
+            const outfit = [blusa, falda, zapatos, accessory]
+            if (hasUniqueItems(outfit)) {
+              results.push(outfit)
             }
           }
         }
@@ -249,20 +254,24 @@ function buildCombinations(style, items) {
     const shoes = pool.filter((item) => item.category === 'zapatos')
     const bags = pool.filter((item) => item.category === 'bolso')
     const collars = pool.filter((item) => item.category === 'collar')
+    const jackets = pool.filter((item) => item.category === 'chaqueta')
     const accessories = pool.filter((item) => item.category === 'accesorio')
-    const accessoryOptions = getAccessoryOptions(pool)
     const bagOptions = [[]].concat(bags.map((item) => [item]))
     const collarOptions = [[]].concat(collars.map((item) => [item]))
+    const jacketOptions = [[]].concat(jackets.map((item) => [item]))
+    const accessoryOptions = [[]].concat(accessories.map((item) => [item]))
 
     for (const top of tops) {
       for (const bottom of bottoms) {
         for (const shoe of shoes) {
           for (const bagChoice of bagOptions) {
             for (const collarChoice of collarOptions) {
-              for (const accessoryChoice of accessoryOptions) {
-                const outfit = [top, bottom, shoe, ...bagChoice, ...collarChoice, ...accessoryChoice]
-                if (hasUniqueItems(outfit)) {
-                  results.push(outfit)
+              for (const jacketChoice of jacketOptions) {
+                for (const accessoryChoice of accessoryOptions) {
+                  const outfit = [top, bottom, shoe, ...bagChoice, ...collarChoice, ...jacketChoice, ...accessoryChoice]
+                  if (hasUniqueItems(outfit)) {
+                    results.push(outfit)
+                  }
                 }
               }
             }
@@ -427,15 +436,15 @@ export function getStyleEmoji(style) {
 export const outfitRules = {
   gothic: {
     title: 'Gótico',
-    summary: 'Blusa + falda + zapatos + accesorio o guantes.',
+    summary: 'Blusa + falda + zapatos + 1 guante o 1 accesorio.',
   },
   vintage: {
     title: 'Romántico / Vintage',
-    summary: 'Top o vestido con silueta romántica y pieza vintage.',
+    summary: 'Vestido solo o blusa + falda/pantalón; chaqueta opcional.',
   },
   oldMoney: {
     title: 'Old Money',
-    summary: '1 tipo de zapato, bolso opcional, collar opcional y accesorios.',
+    summary: 'Zapatos obligatorios, bolso/collar opcionales y máximo 1 accesorio.',
   },
   baddie: {
     title: 'Baddie',
