@@ -180,17 +180,16 @@ function validateStyleRules(style, items) {
     const dressCount = items.filter((item) => item.category === 'vestido').length
     const topCount = items.filter((item) => item.category === 'blusa').length
     const bottomCount = items.filter((item) => ['falda', 'pantalon', 'short'].includes(item.category)).length
-    const shoeCount = items.filter((item) => item.category === 'zapatos').length
     const bagCount = items.filter((item) => item.category === 'bolso').length
     const collarCount = items.filter((item) => item.category === 'collar').length
     const jacketCount = items.filter((item) => item.category === 'chaqueta').length
     const accessoryCount = items.filter((item) => item.category === 'accesorio').length
 
     if (dressCount > 0) {
-      return dressCount === 1 && topCount === 0 && bottomCount === 0 && shoeCount === 0 && bagCount === 0 && collarCount === 0 && jacketCount === 0 && accessoryCount === 0
+      return dressCount === 1 && topCount === 0 && bottomCount === 0 && bagCount === 0 && collarCount === 0 && jacketCount === 0 && accessoryCount === 0
     }
 
-    return topCount === 1 && bottomCount === 1 && shoeCount === 1 && bagCount <= 1 && collarCount <= 1 && jacketCount <= 1 && accessoryCount <= 1
+    return topCount === 1 && bottomCount === 1 && bagCount <= 1 && collarCount <= 1 && jacketCount <= 1 && accessoryCount <= 1
   }
 
   if (style === 'oldMoney') {
@@ -251,7 +250,6 @@ function buildCombinations(style, items) {
     const tops = pool.filter((item) => item.category === 'blusa')
     const bottoms = pool.filter((item) => ['falda', 'pantalon', 'short'].includes(item.category))
     const dresses = pool.filter((item) => item.category === 'vestido')
-    const shoes = pool.filter((item) => item.category === 'zapatos')
     const bags = pool.filter((item) => item.category === 'bolso')
     const collars = pool.filter((item) => item.category === 'collar')
     const jackets = pool.filter((item) => item.category === 'chaqueta')
@@ -263,15 +261,13 @@ function buildCombinations(style, items) {
 
     for (const top of tops) {
       for (const bottom of bottoms) {
-        for (const shoe of shoes) {
-          for (const bagChoice of bagOptions) {
-            for (const collarChoice of collarOptions) {
-              for (const jacketChoice of jacketOptions) {
-                for (const accessoryChoice of accessoryOptions) {
-                  const outfit = [top, bottom, shoe, ...bagChoice, ...collarChoice, ...jacketChoice, ...accessoryChoice]
-                  if (hasUniqueItems(outfit)) {
-                    results.push(outfit)
-                  }
+        for (const bagChoice of bagOptions) {
+          for (const collarChoice of collarOptions) {
+            for (const jacketChoice of jacketOptions) {
+              for (const accessoryChoice of accessoryOptions) {
+                const outfit = [top, bottom, ...bagChoice, ...collarChoice, ...jacketChoice, ...accessoryChoice]
+                if (hasUniqueItems(outfit)) {
+                  results.push(outfit)
                 }
               }
             }
